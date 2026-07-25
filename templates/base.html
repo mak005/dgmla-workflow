@@ -1,0 +1,50 @@
+{% load static %}
+{% load tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}
+
+      {% endblock %}
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    {% tailwind_css %}
+  </head>
+  <body class="bg-white font-montserrat h-screen flex flex-col">
+    <header class="w-full flex justify-between items-center px-8 py-4 bg-white">
+      <img src="{% static 'img/LogoSG.png' %}" />
+      <img src="{% static 'img/Societe-Generale.png' %}" />
+    </header>
+
+    {% block nav %}
+
+    {% endblock %}
+
+    {% block page_title %}
+
+    {% endblock %}
+
+    <main class="flex-1 overflow-y-auto">
+      {% block content %}
+
+      {% endblock %}
+    </main>
+
+    {% if messages %}
+      <div class="max-w-4xl mx-auto mt-4">
+        {% for message in messages %}
+          <p class="text-sg-red text-sm">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <script src="{% static 'js/lucide.js' %}"></script>
+    <script>
+      lucide.createIcons()
+    </script>
+  </body>
+</html>

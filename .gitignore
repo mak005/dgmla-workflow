@@ -1,0 +1,19 @@
+# Environnement virtuel
+env/
+
+# Base de données locale
+db.sqlite3
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+
+# Node/Tailwind
+theme/static_src/node_modules/
+theme/static/css/dist/
+
+# VS Code
+.vscode/
+
+# Variables d'environnement (si tu en crées un jour)
+.env

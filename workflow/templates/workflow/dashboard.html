@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Dashboard
+{% endblock %}
+
+{% block nav %}
+  <nav class="mt-3 mx-10 mb-6 flex justify-between">
+    <div class="flex">
+      <a href="{% url 'dashboard' %}" class="px-6 py-3 text-sm text-black {% if '/dashboard/' in request.path or '/demande/' in request.path %} border-b-2 border-b-sg-red {% endif %} hover:text-white hover:bg-sg-red">MES DEMANDES</a>
+      <a href="{% url 'catalogue' %}" class="px-6 py-3 text-sm text-black {% if '/catalogue/' in request.path %} border-b-2 border-b-sg-red {% endif %} hover:text-white hover:bg-sg-red">CATALOGUE</a>
+
+      {% if user.role == 'RESP_DEPT' %}
+        <a href="#" class="px-6 py-3 text-sm text-black hover:text-white hover:bg-sg-red">DEMANDES A VALIDER</a>
+        <a href="#" class="px-6 py-3 text-sm text-black hover:text-white hover:bg-sg-red">HISTORIQUE</a> {% comment %}Liste des demandes et leur état (validée/rejetée){% endcomment %}
+      {% endif %}
+
+      {% if user.role == 'GEST_DGMLA' %}
+        <a href="#" class="px-6 py-3 text-sm text-black hover:text-white hover:bg-sg-red">DEMANDES TRANSMISES</a>
+      {% endif %}
+
+      {% if user.role == 'RESP_DGMLA' %}
+        <a href="#" class="px-6 py-3 text-sm text-black hover:text-white hover:bg-sg-red">DEMANDES PREPAREES</a>
+        <a href="#" class="px-6 py-3 text-sm text-black hover:text-white hover:bg-sg-red">STATISTIQUES</a>
+      {% endif %}
+    </div>
+
+    <a href="/comptes/connexion/" class="px-6 py-3 mr-0 text-sm text-black hover:text-white hover:bg-black">DECONNEXION</a>
+  </nav>
+{% endblock %}
+
+{% block page_title %}
+  <h1 class="text-2xl text-center mt-2 mb-4">MES DEMANDES</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-4xl mx-auto py-10">
+    <div class="flex justify-end mb-4">
+      <a href="{% url 'creer_demande' %}" class="px-4 py-2 bg-sg-red text-white text-sm hover:opacity-80">+ Nouvelle demande</a>
+    </div>
+
+    <div class="mb-6">
+      <label class="font-bold">Statut</label>
+      <select name="statut">
+        <option value="">Tous</option>
+        {% for statut in statuts %}
+          <option value="">{{ statut }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <table class="text-center w-full">
+      <thead>
+        <tr class="border-b">
+          <th>Code</th>
+          <th>Date</th>
+          <th>Nombre d'articles</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% comment %} {% if not demandes %}
+          <tr>
+            <td colspan="5" class="pt-2">Aucune demande</td>
+          </tr>
+        {% endif %} {% endcomment %}
+
+        {% for demande in demandes %}
+          <tr>
+            <td>{{ demande.code }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="{% url 'consulter_demande' %}"><i data-lucide="eye"></i></a>
+  </div>
+{% endblock %}

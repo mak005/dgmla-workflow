@@ -1,0 +1,103 @@
+{% extends 'workflow/dashboard.html' %}
+
+{% block title %}
+  Nouvelle demande
+{% endblock %}
+
+{% block page_title %}
+  <h1 class="text-2xl text-center mt-2 mb-6">CREER UNE DEMANDE</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-4xl mx-auto py-10">
+    <form method="post">
+      {% csrf_token %}
+      <table class="text-center w-full table-fixed">
+        <thead class="sticky top-0 border-b bg-white">
+          <tr class="border-b overflow-y-auto">
+            <th class="pb-3 pr-4 pl-5 w-6">N°</th>
+            <th class="pb-3 pr-4 w-60">Catégorie</th>
+            <th class="pb-3 pr-4 w-68">Article</th>
+            <th class="pb-3 pr-4 w-22">Quantité</th>
+            <th class="pb-3">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="lignes-demande"></tbody>
+      </table>
+      
+      <input type="hidden" id="nbr-lignes" name="form-TOTAL_FORMS" value="0">
+
+      <button type="button" id="ajouter-ligne" class="mt-2 hover:underline hover:text-sg-red">+ Ajouter un article</button>
+
+      {% comment %}BOUTONS D'ACTIONS{% endcomment %}
+
+      <div class="flex justify-end gap-4 mt-10">
+        <a href="{% url 'dashboard' %}" class="px-4 py-2 bg-sg-black text-white text-sm hover:opacity-80">ANNULER</a>
+        <button type="submit" class="px-4 py-2 bg-sg-red text-white text-sm hover:opacity-80">VALIDER</button>
+      </div>
+    </form>
+  </div>
+
+  {% comment %}TEMPLATE DES LIGNES A AJOUTER{% endcomment %}
+
+  <template id="template-ligne-demande">
+    <tr class="border-b">
+      <td class="pt-2 pb-8 w-6 numero-ligne"></td>
+      <td class="pt-2 pb-8 w-60 px-4">
+        <select name="categorie" required class="w-full focus:border focus:outline-0">
+            {% for categorie in categories %}
+                <option value="{{ categorie.id }}"{% if categorie.id == categorie_selectionnee %}selected{% endif %}>{{ categorie.libelle_categ }}</option>
+            {% endfor %}
+        </select>
+      </td>
+      <td class="pt-2 pb-8 w-68 px-4">
+        <select name="article" required class="w-full focus:border focus:outline-0">
+            {% for article in articles %}
+                <option value="{{ article.id }}"{% if article.id == article_selectionne %}selected{% endif %}>{{ article.libelle_article}}</option>
+            {% endfor %}
+        </select>
+      </td>
+      <td class="pt-2 pb-8 w-22 px-4">
+        <input type="number" min="0" required name="quantite_demandee" class="w-full border-b focus:border focus:outline-0" />
+      </td>
+      <td class="pt-2 pb-8 px-4">
+        <button type="button" class="supprimer-ligne hover:text-sg-red">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      </td>
+    </tr>
+  </template>
+
+
+  
+  <script>
+    const btnAjouterLigne = document.getElementById('ajouter-ligne');
+    const btnSupprimerLigne = document.querySelectorAll('.supprimer-ligne');
+    const template = document.getElementById('template-ligne-demande');
+    const tbody = document.getElementById('lignes-demande');
+
+    btnAjouterLigne.addEventListener("click", () => {
+      let nouvelleLigne = template.content.cloneNode(true); // Duplication du contenu du template
+      let nbrLignes = document.querySelectorAll('.numero-ligne').length; // Comptage du nombre de lignes existantes
+      let numeroLigne = nbrLignes + 1; 
+      nouvelleLigne.querySelector('.numero-ligne').textContent = numeroLigne; // Affectation du nombe de lignes existantes + 1 à la nouvelle ligne
+      
+      // Formatage des noms des champs des lignes pour qu'ils soient uniques
+      nouvelleLigne.querySelectorAll('[name]').forEach((el) => {
+        el.name = `form-${numeroLigne}-${el.name}`;
+      }); 
+      
+      tbody.appendChild(nouvelleLigne); // Ajout de la nouvelle ligne au tableau
+      document.getElementById('nbr-lignes').value = numeroLigne; // Mise à jour du nombre de lignes dans le champ caché
+    });
+
+    tbody.addEventListener("click", (event) => {
+      const bouton = event.target.closest('.supprimer-ligne');
+      if(bouton) {
+        const ligne = bouton.closest('tr');
+        ligne.remove();
+      }
+    })
+  </script>
+{% endblock %}
