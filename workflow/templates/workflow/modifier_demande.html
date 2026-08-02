@@ -1,0 +1,216 @@
+{% extends 'workflow/dashboard.html' %}
+
+{% block title %}
+  Modifier une demande
+{% endblock %}
+
+{% block page_title %}
+  <h1 class="text-2xl text-center mt-2 mb-4">MODIFIER LA DEMANDE <span class="font-bold"> {{ demande }} </span></h1>
+{% endblock %}
+
+{% block content %}
+  <div class="max-w-4xl mx-auto py-10">
+    <form method="post">
+      {% csrf_token %}
+      <table class="text-center w-full table-fixed">
+        <thead class="sticky top-0 border-b bg-white">
+          <tr class="border-b overflow-y-auto">
+            <th class="pb-3 pr-4 pl-5 w-8">N°</th>
+            <th class="pb-3 pr-4 w-60">Catégorie</th>
+            <th class="pb-3 pr-4 w-68">Article</th>
+            <th class="pb-3 pr-4 w-22">Quantité</th>
+            <th class="pb-3">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="lignes-demande">
+          {% for ligne in lignes %}
+            <tr class="border-b even:bg-sg-gray-light ancienne-ligne">
+              <td class="pt-2 pb-8 w-6 text-right font-bold numero-ligne">{{ forloop.counter }}</td>
+              <td class="pt-2 pb-8 w-60 px-4">
+                <select name="categorie" required class="w-full focus:border focus:outline-0">
+                  <option value="">Choisir une catégorie</option>
+                  {% for categorie in categories %}
+                    <option value="{{ categorie.id }}" {% if categorie.id == ligne.article.categorie.id %}selected{% endif %}>{{ categorie.libelle_categ }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="pt-2 pb-8 w-68 px-4">
+                <select name="article" required class="w-full focus:border focus:outline-0">
+                  <option value="">Choisir un article</option>
+                  {% for article in articles %}
+                    
+                    {% if article.categorie.id == ligne.article.categorie.id %}
+                        <option value="{{ article.id }}"{% if article.id == ligne.article.id %}selected{% endif %}>{{ article }}</option>
+                    {% endif %}
+                        
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="pt-2 pb-8 w-22 px-4">
+                <input type="number" value="{{ ligne.quantite_demandee }}" min="0" required name="quantite_demandee" class="w-full border-b focus:border focus:outline-0" />
+              </td>
+              <td class="pt-2 pb-8 px-4">
+                <button type="button" class="supprimer-ligne hover:text-sg-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <input type="hidden" id="nbr-lignes" name="form-TOTAL_FORMS" value="0" />
+      <button type="button" id="ajouter-ligne" class="mt-2 hover:underline hover:text-sg-red">+ Ajouter un article</button>
+
+      {% comment %}BOUTONS D'ACTIONS{% endcomment %}
+
+      <div class="flex justify-end gap-4 mt-10">
+        <button type="button" id="btn-annuler" class="px-4 py-2 bg-sg-black text-white text-sm hover:opacity-80">ANNULER</button>
+        <button type="submit" class="px-4 py-2 bg-sg-red text-white text-sm hover:opacity-80">ENREGISTRER LES MODIFICATIONS</button>
+      </div>
+    </form>
+  </div>
+
+  <template id="template-ligne-demande">
+    <tr class="border-b">
+      <td class="pt-2 pb-8 w-6 text-right font-bold numero-ligne"></td>
+      <td class="pt-2 pb-8 w-60 px-4">
+        <select name="categorie" required class="w-full focus:border focus:outline-0">
+          <option value="">Choisir une catégorie</option>
+            {% for categorie in categories %}
+                <option value="{{ categorie.id }}">{{ categorie.libelle_categ }}</option>
+            {% endfor %}
+        </select>
+      </td>
+      <td class="pt-2 pb-8 w-68 px-4">
+        <select name="article" required class="w-full focus:border focus:outline-0">
+          <option value="">Choisir un article</option>
+        </select>
+      </td>
+      <td class="pt-2 pb-8 w-22 px-4">
+        <input type="number" min="0" required name="quantite_demandee" class="w-full border-b focus:border focus:outline-0" />
+      </td>
+      <td class="pt-2 pb-8 px-4">
+        <button type="button" class="supprimer-ligne hover:text-sg-red"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+      </td>
+    </tr>
+  </template>
+
+  <div id="modal-confirmation" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-8 max-w-lg w-full">
+        <h3 class="mb-8">Voulez-vous vraiment annuler les modifications ?</h3>
+          <div class="flex justify-end gap-3">
+            <button type="button" class="btn-annuler-modal px-4 py-2 bg-sg-black text-white hover:opacity-80">NON</button>
+            <a href="{% url 'dashboard' %}" class="px-4 py-2 bg-sg-red text-white hover:opacity-80">OUI</a>
+          </div>
+      </div>
+    </div>
+
+  <script>
+    // DECLARATION DES CONSTANTES
+    const btnAjouterLigne = document.getElementById('ajouter-ligne');
+    const btnSupprimerLigne = document.querySelectorAll('.supprimer-ligne');
+    const template = document.getElementById('template-ligne-demande');
+    const tbody = document.getElementById('lignes-demande');
+    
+    // FORMATAGE DES NOMS DES CHAMPS DES ANCIENNES LIGNES
+    anciennesLignes = document.querySelectorAll('.ancienne-ligne');
+    anciennesLignes.forEach((ligne) => {
+        const index = ligne.querySelector('.numero-ligne').closest('td').textContent;
+        ligne.querySelectorAll('[name]').forEach((el) => {
+            el.name = `form-${index}-${el.name}`
+        });
+    });
+
+    // FONCTION D'AJOUT DE LIGNE
+    function ajouterLigne() {
+      let nouvelleLigne = template.content.cloneNode(true); // Duplication du contenu du template
+      let nbrLignes = document.querySelectorAll('.numero-ligne').length; // Comptage du nombre de lignes existantes
+      let numeroLigne = nbrLignes + 1
+      nouvelleLigne.querySelector('.numero-ligne').textContent = numeroLigne; // Affectation du nombe de lignes existantes + 1 à la nouvelle ligne
+    
+      // Formatage des noms des champs des lignes pour qu'ils soient uniques
+      nouvelleLigne.querySelectorAll('[name]').forEach((el) => {
+        el.name = `form-${numeroLigne}-${el.name}`
+      });
+    
+      tbody.appendChild(nouvelleLigne); // Ajout de la nouvelle ligne au tableau
+      document.getElementById('nbr-lignes').value = numeroLigne; // Mise à jour du nombre de lignes dans le champ caché
+    }
+    
+    // AJOUT D'UNE LIGNE AU CLIC SUR LE BOUTON
+    btnAjouterLigne.addEventListener('click', () => {
+      ajouterLigne()
+      lucide.createIcons()
+    });
+    
+    // SUPPRESSION D'UNE LIGNE
+    tbody.addEventListener('click', (event) => {
+      const bouton = event.target.closest('.supprimer-ligne'); // sélection du bouton supprimer
+      if (bouton) {
+        const ligne = bouton.closest('tr'); // sélection de la ligne à supprimer
+        //const numeroLigne = ligne.querySelector('.numero-ligne').textContent;
+        ligne.remove();
+    
+        // Mise à jour des numéros de lignes après suppression
+        document.querySelectorAll('.numero-ligne').forEach((el, index) => {
+          el.textContent = index + 1
+        });
+        document.getElementById('nbr-lignes').value = document.querySelectorAll('.numero-ligne').length;
+        
+        // Mise a jour des noms des champs apres suppression
+        lignes = document.querySelectorAll('.numero-ligne');
+        lignes.forEach((ligne, index) => {
+            ligne.closest('tr').querySelectorAll('[name]').forEach((el) => {
+                el.name = `form-${index+1}-${el.name.split('-').at(-1)}`
+            });
+        });
+      }
+    });
+    
+    // FILTRAGE DES ARTICLES EN FONCTION DE LA CATEGORIE SELECTIONNEE
+    tbody.addEventListener('change', function (event) {
+      if (!event.target.name.includes('categorie')) return;
+      const selectCategorie = event.target.closest('select[name*="categorie"]');
+      const categorieId = selectCategorie.value;
+      const selectArticle = selectCategorie.closest('tr').querySelector('select[name*="article"]');
+    
+      selectArticle.innerHTML = '<option value="">Choisir un article</option>'; // Réinitialiser les options avant d'ajouter les nouvelles
+    
+      fetch("{% url 'articles_par_categorie' 1 %}".replace('1', categorieId))
+        .then((response) => response.json())
+        .then((data) => {
+          data.forEach((article) => {
+            const option = document.createElement('option')
+            option.value = article.id
+            option.textContent = article.libelle_article
+            selectArticle.appendChild(option)
+          })
+        });
+    });
+
+    // MISE A JOUR DU NOMBRE DE LIGNES INDEPENDAMMENT DE TOUT EVENT
+    document.getElementById('nbr-lignes').value = document.querySelectorAll('.numero-ligne').length;
+
+    // DETECTION DE MODIFICATION DE FORMULAIRE
+    let formModifie = false;
+    const form = document.querySelector('form');
+    const btnAnnuler = document.getElementById('btn-annuler');
+    const modalConfirmation = document.getElementById('modal-confirmation');
+    form.addEventListener('input', () => {
+        formModifie = true;
+    });
+    btnAnnuler.addEventListener('click', () => {
+        if(formModifie){
+            modalConfirmation.classList.remove('hidden');
+            //document.body.style.overflow = 'hidden';
+            modalConfirmation.querySelector('.btn-annuler-modal').addEventListener('click', () => {
+                modalConfirmation.classList.add('hidden');
+                //document.body.style.overflow = 'auto';
+
+            });
+        }else{
+            window.location.href = "{% url 'dashboard' %}";
+        }
+    })
+  </script>
+{% endblock %}

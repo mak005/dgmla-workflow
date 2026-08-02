@@ -15,7 +15,7 @@
       <table class="text-center w-full table-fixed">
         <thead class="sticky top-0 border-b bg-white">
           <tr class="border-b overflow-y-auto">
-            <th class="pb-3 pr-4 pl-5 w-6">N°</th>
+            <th class="pb-3 pr-4 pl-5 w-8">N°</th>
             <th class="pb-3 pr-4 w-60">Catégorie</th>
             <th class="pb-3 pr-4 w-68">Article</th>
             <th class="pb-3 pr-4 w-22">Quantité</th>
@@ -42,20 +42,19 @@
   {% comment %}TEMPLATE DES LIGNES A AJOUTER{% endcomment %}
 
   <template id="template-ligne-demande">
-    <tr class="border-b">
-      <td class="pt-2 pb-8 w-6 numero-ligne"></td>
+    <tr class="border-b even:bg-sg-gray-light">
+      <td class="pt-2 pb-8 w-6 text-right numero-ligne"></td>
       <td class="pt-2 pb-8 w-60 px-4">
         <select name="categorie" required class="w-full focus:border focus:outline-0">
+          <option value="">Choisir une catégorie</option>
             {% for categorie in categories %}
-                <option value="{{ categorie.id }}"{% if categorie.id == categorie_selectionnee %}selected{% endif %}>{{ categorie.libelle_categ }}</option>
+                <option value="{{ categorie.id }}">{{ categorie.libelle_categ }}</option>
             {% endfor %}
         </select>
       </td>
       <td class="pt-2 pb-8 w-68 px-4">
         <select name="article" required class="w-full focus:border focus:outline-0">
-            {% for article in articles %}
-                <option value="{{ article.id }}"{% if article.id == article_selectionne %}selected{% endif %}>{{ article.libelle_article}}</option>
-            {% endfor %}
+            <option value="">Choisir un article</option>
         </select>
       </td>
       <td class="pt-2 pb-8 w-22 px-4">
@@ -72,32 +71,74 @@
 
   
   <script>
+
+    // DECLARATION DES CONSTANTES
     const btnAjouterLigne = document.getElementById('ajouter-ligne');
     const btnSupprimerLigne = document.querySelectorAll('.supprimer-ligne');
     const template = document.getElementById('template-ligne-demande');
     const tbody = document.getElementById('lignes-demande');
 
-    btnAjouterLigne.addEventListener("click", () => {
+    // FONCTION D'AJOUT DE LIGNE
+    function ajouterLigne(){
       let nouvelleLigne = template.content.cloneNode(true); // Duplication du contenu du template
       let nbrLignes = document.querySelectorAll('.numero-ligne').length; // Comptage du nombre de lignes existantes
       let numeroLigne = nbrLignes + 1; 
       nouvelleLigne.querySelector('.numero-ligne').textContent = numeroLigne; // Affectation du nombe de lignes existantes + 1 à la nouvelle ligne
-      
+        
       // Formatage des noms des champs des lignes pour qu'ils soient uniques
       nouvelleLigne.querySelectorAll('[name]').forEach((el) => {
         el.name = `form-${numeroLigne}-${el.name}`;
       }); 
-      
+        
       tbody.appendChild(nouvelleLigne); // Ajout de la nouvelle ligne au tableau
       document.getElementById('nbr-lignes').value = numeroLigne; // Mise à jour du nombre de lignes dans le champ caché
+    }
+    
+    // Ajout d'une ligne dès chargement de la page
+    document.addEventListener('DOMContentLoaded', () => {
+      ajouterLigne();
+      lucide.createIcons(); // Initialisation des icônes Lucide car ajout dynamique d'éléments
     });
 
-    tbody.addEventListener("click", (event) => {
-      const bouton = event.target.closest('.supprimer-ligne');
-      if(bouton) {
-        const ligne = bouton.closest('tr');
-        ligne.remove();
-      }
-    })
+    // AJOUT D'UNE LIGNE AU CLIC SUR LE BOUTON
+    btnAjouterLigne.addEventListener("click", () => {
+      ajouterLigne();
+      lucide.createIcons();
+   });
+
+  // SUPPRIMER UNE LIGNE
+  tbody.addEventListener("click", (event) => {
+    const bouton = event.target.closest('.supprimer-ligne');
+    if(bouton) {
+      const ligne = bouton.closest('tr');
+      const numeroLigne = ligne.querySelector('.numero-ligne').textContent;
+      ligne.remove();
+
+      // Mise à jour des numéros de lignes après suppression
+      document.querySelectorAll('.numero-ligne').forEach((el, index) => {
+        el.textContent = index + 1;
+      });
+      document.getElementById('nbr-lignes').value = document.querySelectorAll('.numero-ligne').length;
+    }
+  });
+
+  // FILTRAGE DES ARTICLES EN FONCTION DE LA CATEGORIE SELECTIONNEE
+  tbody.addEventListener('change', function(event) {
+    if (!event.target.name.includes('categorie')) return;
+    const selectCategorie = event.target.closest('select[name*="categorie"]');
+    const categorieId = selectCategorie.value;
+    const selectArticle = selectCategorie.closest('tr').querySelector('select[name*="article"]');
+
+    selectArticle.innerHTML = '<option value="">Choisir un article</option>'; // Réinitialiser les options avant d'ajouter les nouvelles
+    
+    fetch("{% url 'articles_par_categorie' 1 %}".replace('1', categorieId)).then(response => response.json()).then(data => {
+      data.forEach(article => {
+        const option = document.createElement('option');
+        option.value = article.id;
+        option.textContent = article.libelle_article;
+        selectArticle.appendChild(option);
+      });
+    });
+  });
   </script>
 {% endblock %}

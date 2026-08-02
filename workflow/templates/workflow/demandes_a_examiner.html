@@ -1,0 +1,61 @@
+{% extends 'workflow/dashboard.html' %}
+
+
+{% block title %}
+    Demandes à examiner
+{% endblock title %}
+
+
+{% block page_title %}
+  <h1 class="text-2xl text-center mt-2 mb-4">DEMANDES A EXAMINER</h1>
+{% endblock page_title %}
+
+
+{% block content %}
+    <div class="max-w-4xl mx-auto py-10">
+    <div>
+      <div>
+        <p class="text-gray-500">Nombre de demandes :
+          <span class="font-semibold text-black">{{ demandes|length }}</span>
+        </p>      
+      </div>
+    </div>
+
+    <table class="text-center w-full">
+      <thead class="sticky top-0 overflow-y-auto bg-white">
+        <tr class="border-b">
+          <th class="pb-3">Code</th>
+          <th class="pb-3 w-20">Demandeur</th>
+          <th class="pb-3">Date</th>
+          <th class="pb-3 w-20">Nombre d'articles</th>
+          <th class="pb-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not demandes %}
+          <tr class="h-6">
+            <td colspan="5" class="pt-3">Aucune demande à examiner pour le moment.</td>
+          </tr>
+        {% endif %}
+
+        {% for demande in demandes %}
+          <tr class="h-12 even:bg-sg-gray-light">
+            <td class="font-bold">{{ demande }}</td>
+            <td>{{ demande.agent.matricule }}</td>
+            <td>{{ demande.date_demande }}</td>
+            <td class="text-right">{{ demande.lignedemande_set.all|length }}</td>
+
+            {% comment %}COLONNE ACTIONS{% endcomment %}
+
+            <td class="inline-flex pt-4 gap-2">
+              <a href="{% url 'consulter_demande' demande.id %}" class="hover:text-sg-red"><i data-lucide="eye" class="w-4 h-4"></i></a>
+              <a href="#" class="hover:text-sg-red mr-4"><i data-lucide="" class="w-4 h-4"></i></a>             
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock content %}
+    
+    

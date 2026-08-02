@@ -1,32 +1,76 @@
 {% extends 'workflow/dashboard.html' %}
 
+{% block title %}
+  Détails d'une demande
+{% endblock %}
+
 {% block page_title %}
-  <h1 class="text-2xl text-center mt-2 mb-10">DEMANDE</h1>
+  <h1 class="text-2xl text-center mt-2 mb-10">DEMANDE <span class="font-bold">{{ demande }}</span></h1>
 {% endblock %}
 
 {% block content %}
   <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between mb-6 border-sg-gray-border space-y-2">
+      <div>
+        <div>
+          <p class="text-sm text-gray-500">Date</p>
+          <p class="font-semibold">{{ demande.date_demande }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500">Département</p>
+          <p class="font-semibold">{{ demande.agent.departement.code_dept }}</p>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500">Statut</p>
+          <p class="font-semibold">{{ demande.statut }}</p>
+        </div>
+      </div>
+      <div class="flex self-end mb-4">
+        <a href="
+        {% if user.role == 'RESP_DEPT' %}
+            {% url 'demandes_a_examiner' %}
+          {% else %}
+            {% url 'dashboard' %}
+          {% endif %}
+          "
+          class="px-4 py-2 mr-1 bg-sg-black text-white text-sm hover:opacity-80">
+          RETOUR
+        </a>
+        
+        {% if user.role == "RESP_DEPT" %}
+        <form method="post" class="mr-1" action="{% url 'rejeter_demande' demande.id %}">
+          {% csrf_token %}
+          <button type="submit" class="px-4 py-2 bg-sg-red text-white text-sm hover:opacity-80">REJETER</button>
+        </form>
+        <form method="post" action="{% url 'valider_demande' demande.id %}">
+          {% csrf_token %}
+          <button type="submit" class="px-4 py-2 bg-green-900 text-white text-sm hover:opacity-80">VALIDER</button>
+        </form>
+        {% else %}  
+          <a href="{% url 'modifier_demande' demande.id %}" class="px-4 py-2 bg-sg-red text-white text-sm hover:opacity-80">MODIFIER</a>
+        {% endif %}
+      </div>
+    </div>
+
     <table class="text-center w-full overflow-y-auto">
       <thead>
         <tr class="border-b overflow-y-auto">
-          <th class="pb-3 pr-4 w-6">N°</th>
+          <th class="pb-3 pr-4 pl-5 w-6">N°</th>
           <th class="pb-3 pr-4 w-60">Catégorie</th>
           <th class="pb-3 pr-4 w-68">Article</th>
           <th class="pb-3 pr-4 w-22">Quantité</th>
-          <th class="pb-3">Actions</th>
         </tr>
       </thead>
 
       <tbody>
-        <tr class="">
-          <td class="pt-2 pb-8 w-6"></td>
-          <td class="pt-2 pb-8 w-60 px-4"></td>
-          <td class="pt-2 pb-8 w-68 px-4"></td>
-          <td class="pt-2 pb-8 w-22 px-4">
-          </td>
-          <td class="pt-2 pb-8 px-4">
-          </td>
-        </tr>
+        {% for ligne in lignes %}
+          <tr class="border-b even:bg-sg-gray-light">
+            <td class="pt-2 pb-8 w-6 font-bold">{{ forloop.counter }}</td>
+            <td class="pt-2 pb-8 w-60 px-4">{{ ligne.article.categorie.libelle_categ }}</td>
+            <td class="pt-2 pb-8 w-68 px-4">{{ ligne.article.libelle_article }}</td>
+            <td class="pt-2 pb-8 w-22 px-4">{{ ligne.quantite_demandee }}</td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>

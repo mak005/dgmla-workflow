@@ -15,8 +15,8 @@ class CustomPasswordValidator:
                 "un chiffre et un caractère spécial."
             )
 
-    def get_help_text(self):
-        return (
-            "Au moins 12 caractères, une majuscule, une minuscule, "
-            "un chiffre et un caractère spécial."
-        )
+    # def get_help_text(self):
+    #     return (
+    #         "Au moins une majuscule, une minuscule, "
+    #         "un chiffre et un caractère spécial."
+    #     )

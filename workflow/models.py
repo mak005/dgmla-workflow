@@ -14,7 +14,7 @@ class Demande(models.Model):
         LIVREE = 'LIVREE', 'Livrée' # après livraison des fournitures, modification du statut par le responsable département
 
     date_demande = models.DateField()
-    date_livraison = models.DateField()
+    date_livraison = models.DateField(null=True, blank=True)
     statut = models.CharField(max_length=15, choices=Statut.choices, default=Statut.EN_ATTENTE)
     motif_rejet = models.TextField(null=True, blank=True)
 

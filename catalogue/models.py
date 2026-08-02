@@ -12,6 +12,7 @@ class Article(models.Model):
     libelle_article = models.CharField(max_length=30)
     quantite_stock = models.IntegerField()
     seuil_alerte = models.IntegerField()
+    categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.code_article:
@@ -23,5 +24,4 @@ class Article(models.Model):
     def __str__(self):
         return self.libelle_article
 
-    categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE)
 # Create your models here.
